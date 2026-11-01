@@ -1,10 +1,10 @@
 {
+  "id": "./?app=mp3-v2",
   "name": "Uging MP3 Player",
   "short_name": "MP3 Player",
   "description": "Simple MP3 player with equalizer",
-  "start_url": "./",
+  "start_url": "./?app=mp3-v2",
   "scope": "./",
-  "id": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#e0e5ec",
