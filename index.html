@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e0e5ec">
+<title>Uging MP3 Player</title>
+<style>
+:root{--bg:#e0e5ec;--light:#fff;--dark:#a3b1c6;--text:#2d3a4f;--muted:#6b7a90;--accent:#3b82f6;--accent2:#c0392b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;align-items:center;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 10px);gap:8px}
+header h1{font-size:22px;text-align:center;font-weight:800;background:linear-gradient(90deg,#c0392b,#3b82f6,#8e44ad,#16a085,#c0392b);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:flow 4s linear infinite}
+@keyframes flow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.card{background:var(--bg);border-radius:32px;box-shadow:10px 10px 20px var(--dark),-10px -10px 20px var(--light);
+  padding:16px 18px;width:100%;max-width:360px;flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
+.art{width:170px;height:170px;margin:0 auto;border-radius:50%;background:var(--bg);
+  box-shadow:inset 7px 7px 14px var(--dark),inset -7px -7px 14px var(--light);display:flex;align-items:center;justify-content:center}
+.disc{width:112px;height:112px;border-radius:50%;background:var(--bg);font-size:44px;
+  box-shadow:7px 7px 14px var(--dark),-7px -7px 14px var(--light);display:flex;align-items:center;justify-content:center}
+.art.spin .disc{animation:spin 10s linear infinite}
+.art.paused .disc{animation-play-state:paused}
+@keyframes spin{to{transform:rotate(360deg)}}
+.info{text-align:center}
+.title{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.artist{font-size:12px;color:var(--muted);margin-top:3px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:10px;background:var(--bg);
+  box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--bg);
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--bg);border:none;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light)}
+.row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.row input{flex:1}
+.time{min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.controls{display:flex;justify-content:center;align-items:center;gap:14px}
+.btn{width:50px;height:50px;border-radius:50%;border:none;background:var(--bg);color:var(--text);font-size:17px;cursor:pointer;
+  box-shadow:5px 5px 10px var(--dark),-5px -5px 10px var(--light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn:active,.btn.active{box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light)}
+.btn.active{color:var(--accent)}
+.btn.sm{width:40px;height:40px;font-size:13px}
+.btn.play{width:66px;height:66px;font-size:22px;color:var(--accent)}
+.btn.mic.listening{color:var(--accent2)}
+.pill{flex:1;padding:11px 6px;border-radius:24px;border:none;background:var(--bg);color:var(--accent);font-weight:600;font-size:13px;cursor:pointer;
+  box-shadow:5px 5px 10px var(--dark),-5px -5px 10px var(--light)}
+.pill:active{box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light)}
+.actions{display:flex;gap:10px}
+.status{text-align:center;font-size:11px;color:var(--muted);min-height:14px}
+#fileInput{display:none}
+/* Playlist sheet */
+.sheet{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;z-index:5}
+.sheet.show{display:flex}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sheet-head h2{font-size:16px;color:var(--muted);letter-spacing:.5px}
+.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:none;-ms-overflow-style:none}
+.list::-webkit-scrollbar{display:none}
+.track{padding:11px 14px;border-radius:18px;background:var(--bg);box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light);
+  cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track.current{color:var(--accent);font-weight:700}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
+</style>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+</head>
+<body>
+
+<header><h1>Uging MP3 Player</h1></header>
+
+<div class="card">
+  <div class="art" id="art"><div class="disc">🎵</div></div>
+  <div class="info">
+    <div class="title" id="title">Walang Kanta</div>
+    <div class="artist" id="artist">Maghanap ng kanta para magsimula</div>
+  </div>
+  <div>
+    <div class="row">
+      <span class="time" id="cur">0:00</span>
+      <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
+      <span class="time" id="dur">0:00</span>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn sm" id="shuffleBtn" title="Shuffle">⇄</button>
+    <button class="btn" id="prevBtn">⏮</button>
+    <button class="btn play" id="playBtn">▶</button>
+    <button class="btn" id="nextBtn">⏭</button>
+    <button class="btn sm" id="repeatBtn" title="Repeat">↻</button>
+  </div>
+  <div class="row">
+    <span>🔈</span>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
+    <span>🔊</span>
+  </div>
+  <div class="actions">
+    <button class="pill" id="findBtn">📁 Maghanap ng Kanta</button>
+    <button class="pill" id="listBtn">☰ Playlist</button>
+  </div>
+  <div class="actions">
+    <button class="btn mic" id="micBtn" title="Voice command" style="width:100%;border-radius:24px;height:44px;font-size:14px">🎙 Voice Command</button>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<input type="file" id="fileInput" accept=".mp3,audio/mpeg" multiple>
+<audio id="audio" preload="metadata"></audio>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-head"><h2>PLAYLIST</h2><div style="display:flex;gap:8px"><button class="pill" id="addSheetBtn" style="flex:none;padding:8px 14px">+ Add</button><button class="pill" id="closeBtn" style="flex:none;padding:8px 14px">Isara</button></div></div>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const audio=$('audio'), playBtn=$('playBtn'), art=$('art'), seek=$('seek'), volume=$('volume');
+const curEl=$('cur'), durEl=$('dur'), titleEl=$('title'), artistEl=$('artist'), statusEl=$('status');
+let tracks=[], index=-1, shuffle=false, repeat=false, seeking=false;
+audio.volume=parseFloat(volume.value);
+
+const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+Math.floor(s%60).toString().padStart(2,'0'):'0:00';
+const say=m=>{statusEl.textContent=m;};
+
+function renderList(){
+  const list=$('list');
+  if(!tracks.length){list.innerHTML='<div class="empty">Wala pang kanta.<br>Pindutin ang "Maghanap ng Kanta".</div>';return;}
+  list.innerHTML='';
+  tracks.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='track'+(i===index?' current':'');
+    d.textContent=(i+1)+'. '+t.title;
+    d.onclick=()=>{playIndex(i);$('sheet').classList.remove('show');};
+    list.appendChild(d);
+  });
+}
+
+function playIndex(i){
+  index=i; const t=tracks[i];
+  audio.src=t.url; titleEl.textContent=t.title; artistEl.textContent=t.artist;
+  seek.value=0; curEl.textContent='0:00';
+  audio.play().catch(()=>{});
+  renderList();
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist});
+  }
+}
+function togglePlay(){
+  if(index<0){ if(tracks.length) playIndex(0); return; }
+  audio.paused ? audio.play().catch(()=>{}) : audio.pause();
+}
+function nextTrack(){
+  if(!tracks.length) return;
+  let n;
+  if(shuffle&&tracks.length>1){ do{n=Math.floor(Math.random()*tracks.length);}while(n===index); }
+  else n=(index+1)%tracks.length;
+  playIndex(n);
+}
+function prevTrack(){
+  if(!tracks.length) return;
+  if(audio.currentTime>3){audio.currentTime=0;return;}
+  playIndex((index-1+tracks.length)%tracks.length);
+}
+
+playBtn.onclick=togglePlay;
+$('nextBtn').onclick=nextTrack;
+$('prevBtn').onclick=prevTrack;
+$('shuffleBtn').onclick=()=>{shuffle=!shuffle;$('shuffleBtn').classList.toggle('active',shuffle);};
+$('repeatBtn').onclick=()=>{repeat=!repeat;$('repeatBtn').classList.toggle('active',repeat);};
+$('findBtn').onclick=()=>$('fileInput').click();
+$('listBtn').onclick=()=>{renderList();$('sheet').classList.add('show');};
+$('closeBtn').onclick=()=>$('sheet').classList.remove('show');
+$('addSheetBtn').onclick=()=>$('fileInput').click();
+
+$('fileInput').onchange=e=>{
+  const files=Array.from(e.target.files);
+  files.forEach(f=>{
+    const url=URL.createObjectURL(f);
+    tracks.push({title:f.name.replace(/\.[^/.]+$/,''),artist:'Lokal na file',url});
+  });
+  renderList();
+  if(files.length) say(files.length+' kanta ang naidagdag');
+  if(index<0&&tracks.length) playIndex(0);
+  e.target.value='';
+};
+
+audio.addEventListener('play',()=>{playBtn.textContent='❚❚';art.classList.add('spin');art.classList.remove('paused');});
+audio.addEventListener('pause',()=>{playBtn.textContent='▶';art.classList.add('paused');});
+audio.addEventListener('loadedmetadata',()=>{durEl.textContent=fmt(audio.duration);});
+audio.addEventListener('timeupdate',()=>{
+  if(seeking) return;
+  curEl.textContent=fmt(audio.currentTime);
+  if(audio.duration) seek.value=(audio.currentTime/audio.duration)*100;
+});
+audio.addEventListener('ended',()=>{
+  if(repeat&&!shuffle){audio.currentTime=0;audio.play();} else nextTrack();
+});
+seek.addEventListener('input',()=>{seeking=true; if(audio.duration) curEl.textContent=fmt((seek.value/100)*audio.duration);});
+seek.addEventListener('change',()=>{if(audio.duration) audio.currentTime=(seek.value/100)*audio.duration; seeking=false;});
+volume.addEventListener('input',()=>{audio.volume=parseFloat(volume.value);});
+
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('play',()=>audio.play());
+  navigator.mediaSession.setActionHandler('pause',()=>audio.pause());
+  navigator.mediaSession.setActionHandler('nexttrack',nextTrack);
+  navigator.mediaSession.setActionHandler('previoustrack',prevTrack);
+}
+
+/* ---------- Voice commands ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const micBtn=$('micBtn');
+if(!SR){
+  micBtn.disabled=true; micBtn.style.opacity=.5; say('Hindi suportado ang voice sa browser na ito (gamitin ang Chrome)');
+}else{
+  const rec=new SR();
+  rec.lang='fil-PH';        // palitan ng 'en-US' kung English ang gusto mong command
+  rec.continuous=false;
+  rec.interimResults=false;
+  let listening=false;
+
+  function handle(text){
+    const t=text.toLowerCase().trim();
+    say('Narinig: "'+t+'"');
+    const m=t.match(/^(?:play|patugtugin|tugtog|i-play)\s+(.+)$/);
+    if(m){
+      const q=m[1];
+      const i=tracks.findIndex(tr=>tr.title.toLowerCase().includes(q));
+      if(i>=0){playIndex(i);say('Tumutugtog: '+tracks[i].title);return;}
+      say('Hindi nahanap ang "'+q+'"');return;
+    }
+    if(/\b(next|susunod|skip)\b/.test(t)) nextTrack();
+    else if(/\b(previous|back|nauna|balik)\b/.test(t)) prevTrack();
+    else if(/\b(pause|stop|ihinto|hinto|tigil)\b/.test(t)) audio.pause();
+    else if(/\b(play|resume|tugtog|ituloy)\b/.test(t)) { if(audio.paused) togglePlay(); }
+    else if(/\bshuffle\b/.test(t)) $('shuffleBtn').click();
+    else if(/\brepeat|ulitin\b/.test(t)) $('repeatBtn').click();
+    else if(/\b(volume up|lakasan)\b/.test(t)){volume.value=Math.min(1,audio.volume+0.1);audio.volume=parseFloat(volume.value);}
+    else if(/\b(volume down|hinaan)\b/.test(t)){volume.value=Math.max(0,audio.volume-0.1);audio.volume=parseFloat(volume.value);}
+    else say('Hindi ko naintindihan: "'+t+'"');
+  }
+
+  rec.onresult=e=>handle(e.results[0][0].transcript);
+  rec.onerror=e=>say('Error sa mic: '+e.error);
+  rec.onend=()=>{listening=false;micBtn.classList.remove('listening');};
+  micBtn.onclick=()=>{
+    if(listening){rec.stop();return;}
+    try{rec.start();listening=true;micBtn.classList.add('listening');say('Nakikinig... sabihin ang command');}
+    catch(err){say('Hindi ma-start ang mic');}
+  };
+}
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
+</body>
+</html>

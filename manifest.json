@@ -1,0 +1,12 @@
+{
+  "name": "Uging MP3 Player",
+  "short_name": "MP3 Player",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e0e5ec",
+  "theme_color": "#e0e5ec",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
