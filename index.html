@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#e0e5ec">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MP3 Player">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Uging MP3 Player</title>
 <style>
 :root{--bg:#e0e5ec;--light:#fff;--dark:#a3b1c6;--text:#2d3a4f;--muted:#6b7a90;--accent:#3b82f6;--accent2:#c0392b}
@@ -11,8 +17,11 @@
 html,body{height:100%;overflow:hidden}
 body{font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);
   display:flex;flex-direction:column;align-items:center;
-  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 10px);gap:8px}
-header h1{font-size:22px;text-align:center;font-weight:800;background:linear-gradient(90deg,#c0392b,#3b82f6,#8e44ad,#16a085,#c0392b);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:flow 4s linear infinite}
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 10px);gap:8px;user-select:none;-webkit-user-select:none}
+header h1{font-size:22px;text-align:center;font-weight:800;
+  background:linear-gradient(90deg,#c0392b,#3b82f6,#8e44ad,#16a085,#c0392b);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  animation:flow 4s linear infinite}
 @keyframes flow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
 .card{background:var(--bg);border-radius:32px;box-shadow:10px 10px 20px var(--dark),-10px -10px 20px var(--light);
   padding:16px 18px;width:100%;max-width:360px;flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
@@ -42,28 +51,41 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .btn.active{color:var(--accent)}
 .btn.sm{width:40px;height:40px;font-size:13px}
 .btn.play{width:66px;height:66px;font-size:22px;color:var(--accent)}
-.btn.mic.listening{color:var(--accent2)}
 .pill{flex:1;padding:11px 6px;border-radius:24px;border:none;background:var(--bg);color:var(--accent);font-weight:600;font-size:13px;cursor:pointer;
   box-shadow:5px 5px 10px var(--dark),-5px -5px 10px var(--light)}
-.pill:active{box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light)}
+.pill:active,.pill.on{box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light)}
+.pill.small{flex:none;padding:8px 14px}
 .actions{display:flex;gap:10px}
 .status{text-align:center;font-size:11px;color:var(--muted);min-height:14px}
 #fileInput{display:none}
-/* Playlist sheet */
-.sheet{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;z-index:5}
+.sheet{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;z-index:5;
+  padding-top:calc(env(safe-area-inset-top,0px) + 16px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
 .sheet.show{display:flex}
-.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
 .sheet-head h2{font-size:16px;color:var(--muted);letter-spacing:.5px}
-.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:none;-ms-overflow-style:none}
-.list::-webkit-scrollbar{display:none}
-.track{padding:11px 14px;border-radius:18px;background:var(--bg);box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light);
-  cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.track.current{color:var(--accent);font-weight:700}
+.hide-sb{scrollbar-width:none;-ms-overflow-style:none}
+.hide-sb::-webkit-scrollbar{display:none}
+.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.track{padding:10px 12px 10px 14px;border-radius:18px;background:var(--bg);box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light);
+  cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px}
+.track .tname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track.current .tname{color:var(--accent);font-weight:700}
+.del{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);color:var(--accent2);font-size:13px;cursor:pointer;flex-shrink:0;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light)}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
+.eq-top{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.sel{flex:1;padding:10px;border:none;border-radius:16px;background:var(--bg);color:var(--text);font-size:14px;outline:none;
+  box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light)}
+.pre-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:14px}
+.pre-row input{flex:1}
+.bands{display:flex;justify-content:space-between;align-items:flex-end;height:200px;padding:0 2px}
+.bandcol{display:flex;flex-direction:column;align-items:center;width:30px}
+.dbv{font-size:11px;color:var(--muted);height:16px;font-variant-numeric:tabular-nums}
+.band{position:relative;width:30px;height:150px}
+.band input{position:absolute;width:150px;height:9px;left:-60px;top:70px;transform:rotate(-90deg);margin:0}
+.lbl{font-size:10px;color:var(--muted);margin-top:6px}
+.eq-foot{display:flex;gap:10px;margin-top:14px}
 </style>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
 </head>
 <body>
 
@@ -73,14 +95,12 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="art" id="art"><div class="disc">🎵</div></div>
   <div class="info">
     <div class="title" id="title">Walang Kanta</div>
-    <div class="artist" id="artist">Maghanap ng kanta para magsimula</div>
+    <div class="artist" id="artist">Magdagdag ng kanta para magsimula</div>
   </div>
-  <div>
-    <div class="row">
-      <span class="time" id="cur">0:00</span>
-      <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
-      <span class="time" id="dur">0:00</span>
-    </div>
+  <div class="row">
+    <span class="time" id="cur">0:00</span>
+    <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
+    <span class="time" id="dur">0:00</span>
   </div>
   <div class="controls">
     <button class="btn sm" id="shuffleBtn" title="Shuffle">⇄</button>
@@ -95,11 +115,9 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     <span>🔊</span>
   </div>
   <div class="actions">
-    <button class="pill" id="findBtn">📁 Maghanap ng Kanta</button>
+    <button class="pill" id="findBtn">📁 Maghanap</button>
     <button class="pill" id="listBtn">☰ Playlist</button>
-  </div>
-  <div class="actions">
-    <button class="btn mic" id="micBtn" title="Voice command" style="width:100%;border-radius:24px;height:44px;font-size:14px">🎙 Voice Command</button>
+    <button class="pill" id="eqBtn">🎚 EQ</button>
   </div>
   <div class="status" id="status"></div>
 </div>
@@ -107,148 +125,284 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <input type="file" id="fileInput" accept=".mp3,audio/mpeg" multiple>
 <audio id="audio" preload="metadata"></audio>
 
-<div class="sheet" id="sheet">
-  <div class="sheet-head"><h2>PLAYLIST</h2><div style="display:flex;gap:8px"><button class="pill" id="addSheetBtn" style="flex:none;padding:8px 14px">+ Add</button><button class="pill" id="closeBtn" style="flex:none;padding:8px 14px">Isara</button></div></div>
-  <div class="list" id="list"></div>
+<!-- Playlist sheet -->
+<div class="sheet" id="plSheet">
+  <div class="sheet-head">
+    <h2>PLAYLIST</h2>
+    <div style="display:flex;gap:8px">
+      <button class="pill small" id="addSheetBtn">+ Add</button>
+      <button class="pill small" id="plClose">Isara</button>
+    </div>
+  </div>
+  <div class="list hide-sb" id="list"></div>
+</div>
+
+<!-- Equalizer sheet -->
+<div class="sheet" id="eqSheet">
+  <div class="sheet-head">
+    <h2>EQUALIZER</h2>
+    <button class="pill small" id="eqClose">Isara</button>
+  </div>
+  <div class="eq-top">
+    <button class="pill small" id="eqToggle">EQ: ON</button>
+    <select class="sel" id="presetSel"></select>
+  </div>
+  <div class="pre-row">
+    <span>Preamp</span>
+    <input type="range" id="pre" min="-12" max="12" step="1">
+    <span id="preVal" style="min-width:34px;text-align:center">0</span>
+  </div>
+  <div class="bands" id="bands"></div>
+  <div class="eq-foot">
+    <button class="pill" id="eqReset">↺ Reset</button>
+  </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const audio=$('audio'), playBtn=$('playBtn'), art=$('art'), seek=$('seek'), volume=$('volume');
-const curEl=$('cur'), durEl=$('dur'), titleEl=$('title'), artistEl=$('artist'), statusEl=$('status');
-let tracks=[], index=-1, shuffle=false, repeat=false, seeking=false;
-audio.volume=parseFloat(volume.value);
+const audio = $('audio');
+const playBtn = $('playBtn'), art = $('art'), seek = $('seek'), volume = $('volume');
+const curEl = $('cur'), durEl = $('dur'), titleEl = $('title'), artistEl = $('artist'), statusEl = $('status');
+let tracks = [], index = -1, shuffle = false, repeat = false, seeking = false;
+audio.volume = parseFloat(volume.value);
 
-const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+Math.floor(s%60).toString().padStart(2,'0'):'0:00';
-const say=m=>{statusEl.textContent=m;};
+const say = m => { statusEl.textContent = m; };
+const fmt = s => isFinite(s) ? Math.floor(s/60) + ':' + Math.floor(s%60).toString().padStart(2,'0') : '0:00';
 
+/* ---------- Persistent storage (IndexedDB) ---------- */
+const DB_NAME = 'mp3player', STORE = 'songs';
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function dbRun(mode, fn){
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, mode);
+    const req = fn(tx.objectStore(STORE));
+    tx.oncomplete = () => res(req ? req.result : undefined);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+const dbPut = rec => dbRun('readwrite', s => s.put(rec));
+const dbDel = id => dbRun('readwrite', s => s.delete(id));
+const dbAll = () => dbRun('readonly', s => s.getAll());
+
+async function loadLibrary(){
+  try {
+    const recs = await dbAll();
+    tracks = recs.map(r => ({ ...r, url: URL.createObjectURL(r.blob) }));
+    renderList();
+    if(tracks.length) say(tracks.length + ' kanta ang nakasave');
+  } catch(e){ say('Hindi mabasa ang nakasave na kanta'); }
+}
+
+/* ---------- Playlist ---------- */
 function renderList(){
-  const list=$('list');
-  if(!tracks.length){list.innerHTML='<div class="empty">Wala pang kanta.<br>Pindutin ang "Maghanap ng Kanta".</div>';return;}
-  list.innerHTML='';
-  tracks.forEach((t,i)=>{
-    const d=document.createElement('div');
-    d.className='track'+(i===index?' current':'');
-    d.textContent=(i+1)+'. '+t.title;
-    d.onclick=()=>{playIndex(i);$('sheet').classList.remove('show');};
-    list.appendChild(d);
+  const list = $('list');
+  if(!tracks.length){ list.innerHTML = '<div class="empty">Wala pang kanta.<br>Pindutin ang "+ Add".</div>'; return; }
+  list.innerHTML = '';
+  tracks.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'track' + (i === index ? ' current' : '');
+    row.innerHTML = '<span class="tname"></span><button class="del" title="Tanggalin">✕</button>';
+    row.querySelector('.tname').textContent = (i+1) + '. ' + t.title;
+    row.onclick = () => { playIndex(i); $('plSheet').classList.remove('show'); };
+    row.querySelector('.del').onclick = e => { e.stopPropagation(); removeTrack(i); };
+    list.appendChild(row);
   });
 }
 
+async function removeTrack(i){
+  const t = tracks[i];
+  try { await dbDel(t.id); } catch(e){}
+  URL.revokeObjectURL(t.url);
+  tracks.splice(i, 1);
+  if(index === i){
+    audio.pause(); audio.removeAttribute('src'); audio.load();
+    index = -1; titleEl.textContent = 'Walang Kanta'; artistEl.textContent = 'Magdagdag ng kanta para magsimula';
+    playBtn.textContent = '▶'; art.classList.remove('spin');
+  } else if(index > i) index--;
+  renderList();
+  say('Natanggal ang kanta');
+}
+
 function playIndex(i){
-  index=i; const t=tracks[i];
-  audio.src=t.url; titleEl.textContent=t.title; artistEl.textContent=t.artist;
-  seek.value=0; curEl.textContent='0:00';
+  initAudio();
+  index = i; const t = tracks[i];
+  audio.src = t.url; titleEl.textContent = t.title; artistEl.textContent = t.artist;
+  seek.value = 0; curEl.textContent = '0:00';
   audio.play().catch(()=>{});
   renderList();
   if('mediaSession' in navigator){
-    navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist});
+    navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist });
   }
 }
 function togglePlay(){
-  if(index<0){ if(tracks.length) playIndex(0); return; }
+  initAudio();
+  if(index < 0){ if(tracks.length) playIndex(0); return; }
   audio.paused ? audio.play().catch(()=>{}) : audio.pause();
 }
 function nextTrack(){
   if(!tracks.length) return;
   let n;
-  if(shuffle&&tracks.length>1){ do{n=Math.floor(Math.random()*tracks.length);}while(n===index); }
-  else n=(index+1)%tracks.length;
+  if(shuffle && tracks.length > 1){ do { n = Math.floor(Math.random()*tracks.length); } while(n === index); }
+  else n = (index + 1) % tracks.length;
   playIndex(n);
 }
 function prevTrack(){
   if(!tracks.length) return;
-  if(audio.currentTime>3){audio.currentTime=0;return;}
-  playIndex((index-1+tracks.length)%tracks.length);
+  if(audio.currentTime > 3){ audio.currentTime = 0; return; }
+  playIndex((index - 1 + tracks.length) % tracks.length);
 }
 
-playBtn.onclick=togglePlay;
-$('nextBtn').onclick=nextTrack;
-$('prevBtn').onclick=prevTrack;
-$('shuffleBtn').onclick=()=>{shuffle=!shuffle;$('shuffleBtn').classList.toggle('active',shuffle);};
-$('repeatBtn').onclick=()=>{repeat=!repeat;$('repeatBtn').classList.toggle('active',repeat);};
-$('findBtn').onclick=()=>$('fileInput').click();
-$('listBtn').onclick=()=>{renderList();$('sheet').classList.add('show');};
-$('closeBtn').onclick=()=>$('sheet').classList.remove('show');
-$('addSheetBtn').onclick=()=>$('fileInput').click();
+playBtn.onclick = togglePlay;
+$('nextBtn').onclick = nextTrack;
+$('prevBtn').onclick = prevTrack;
+$('shuffleBtn').onclick = () => { shuffle = !shuffle; $('shuffleBtn').classList.toggle('active', shuffle); };
+$('repeatBtn').onclick = () => { repeat = !repeat; $('repeatBtn').classList.toggle('active', repeat); };
+$('findBtn').onclick = () => $('fileInput').click();
+$('addSheetBtn').onclick = () => $('fileInput').click();
+$('listBtn').onclick = () => { renderList(); $('plSheet').classList.add('show'); };
+$('plClose').onclick = () => $('plSheet').classList.remove('show');
 
-$('fileInput').onchange=e=>{
-  const files=Array.from(e.target.files);
-  files.forEach(f=>{
-    const url=URL.createObjectURL(f);
-    tracks.push({title:f.name.replace(/\.[^/.]+$/,''),artist:'Lokal na file',url});
-  });
+$('fileInput').onchange = async e => {
+  const files = Array.from(e.target.files);
+  let added = 0;
+  for(const f of files){
+    const rec = {
+      id: 's' + Date.now() + Math.random().toString(36).slice(2),
+      title: f.name.replace(/\.[^/.]+$/, ''),
+      artist: 'Lokal na file',
+      blob: f
+    };
+    try {
+      await dbPut(rec);
+      tracks.push({ ...rec, url: URL.createObjectURL(f) });
+      added++;
+    } catch(err){ say('Hindi na-save ang ' + f.name); }
+  }
   renderList();
-  if(files.length) say(files.length+' kanta ang naidagdag');
-  if(index<0&&tracks.length) playIndex(0);
-  e.target.value='';
+  if(added) say(added + ' kanta ang naidagdag at nakasave na');
+  if(index < 0 && tracks.length) { index = 0; titleEl.textContent = tracks[0].title; artistEl.textContent = tracks[0].artist; }
+  e.target.value = '';
 };
 
-audio.addEventListener('play',()=>{playBtn.textContent='❚❚';art.classList.add('spin');art.classList.remove('paused');});
-audio.addEventListener('pause',()=>{playBtn.textContent='▶';art.classList.add('paused');});
-audio.addEventListener('loadedmetadata',()=>{durEl.textContent=fmt(audio.duration);});
-audio.addEventListener('timeupdate',()=>{
+/* ---------- Audio events ---------- */
+audio.addEventListener('play', () => { playBtn.textContent = '❚❚'; art.classList.add('spin'); art.classList.remove('paused'); });
+audio.addEventListener('pause', () => { playBtn.textContent = '▶'; art.classList.add('paused'); });
+audio.addEventListener('loadedmetadata', () => { durEl.textContent = fmt(audio.duration); });
+audio.addEventListener('timeupdate', () => {
   if(seeking) return;
-  curEl.textContent=fmt(audio.currentTime);
-  if(audio.duration) seek.value=(audio.currentTime/audio.duration)*100;
+  curEl.textContent = fmt(audio.currentTime);
+  if(audio.duration) seek.value = (audio.currentTime / audio.duration) * 100;
 });
-audio.addEventListener('ended',()=>{
-  if(repeat&&!shuffle){audio.currentTime=0;audio.play();} else nextTrack();
+audio.addEventListener('ended', () => {
+  if(repeat && !shuffle){ audio.currentTime = 0; audio.play(); } else nextTrack();
 });
-seek.addEventListener('input',()=>{seeking=true; if(audio.duration) curEl.textContent=fmt((seek.value/100)*audio.duration);});
-seek.addEventListener('change',()=>{if(audio.duration) audio.currentTime=(seek.value/100)*audio.duration; seeking=false;});
-volume.addEventListener('input',()=>{audio.volume=parseFloat(volume.value);});
+seek.addEventListener('input', () => { seeking = true; if(audio.duration) curEl.textContent = fmt((seek.value/100)*audio.duration); });
+seek.addEventListener('change', () => { if(audio.duration) audio.currentTime = (seek.value/100)*audio.duration; seeking = false; });
+volume.addEventListener('input', () => { audio.volume = parseFloat(volume.value); });
 
 if('mediaSession' in navigator){
-  navigator.mediaSession.setActionHandler('play',()=>audio.play());
-  navigator.mediaSession.setActionHandler('pause',()=>audio.pause());
-  navigator.mediaSession.setActionHandler('nexttrack',nextTrack);
-  navigator.mediaSession.setActionHandler('previoustrack',prevTrack);
+  navigator.mediaSession.setActionHandler('play', () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+  navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
 }
 
-/* ---------- Voice commands ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const micBtn=$('micBtn');
-if(!SR){
-  micBtn.disabled=true; micBtn.style.opacity=.5; say('Hindi suportado ang voice sa browser na ito (gamitin ang Chrome)');
-}else{
-  const rec=new SR();
-  rec.lang='fil-PH';        // palitan ng 'en-US' kung English ang gusto mong command
-  rec.continuous=false;
-  rec.interimResults=false;
-  let listening=false;
+/* ---------- Equalizer (Web Audio API) ---------- */
+const FREQS  = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+const LABELS = ['32','64','125','250','500','1k','2k','4k','8k','16k'];
+const PRESETS = {
+  Flat:      [0,0,0,0,0,0,0,0,0,0],
+  Bass:      [6,5,4,2,0,0,0,0,0,0],
+  Treble:    [0,0,0,0,0,1,3,4,5,5],
+  Pop:       [-1,2,4,4,2,-1,-2,-2,-1,-1],
+  Rock:      [5,4,2,-1,-2,-1,2,4,5,5],
+  Vocal:     [-2,-3,-2,2,4,4,3,1,0,-1],
+  Jazz:      [3,2,1,2,-2,-2,0,1,2,3],
+  Classical: [0,0,0,0,0,0,-2,-3,-3,-4],
+  Dance:     [5,4,1,0,1,3,4,3,2,1],
+  Latin:     [3,2,0,-1,-1,1,3,3,4,2]
+};
+let eq = JSON.parse(localStorage.getItem('eqState') || 'null') || { on: true, pre: 0, bands: PRESETS.Flat.slice(), preset: 'Flat' };
 
-  function handle(text){
-    const t=text.toLowerCase().trim();
-    say('Narinig: "'+t+'"');
-    const m=t.match(/^(?:play|patugtugin|tugtog|i-play)\s+(.+)$/);
-    if(m){
-      const q=m[1];
-      const i=tracks.findIndex(tr=>tr.title.toLowerCase().includes(q));
-      if(i>=0){playIndex(i);say('Tumutugtog: '+tracks[i].title);return;}
-      say('Hindi nahanap ang "'+q+'"');return;
-    }
-    if(/\b(next|susunod|skip)\b/.test(t)) nextTrack();
-    else if(/\b(previous|back|nauna|balik)\b/.test(t)) prevTrack();
-    else if(/\b(pause|stop|ihinto|hinto|tigil)\b/.test(t)) audio.pause();
-    else if(/\b(play|resume|tugtog|ituloy)\b/.test(t)) { if(audio.paused) togglePlay(); }
-    else if(/\bshuffle\b/.test(t)) $('shuffleBtn').click();
-    else if(/\brepeat|ulitin\b/.test(t)) $('repeatBtn').click();
-    else if(/\b(volume up|lakasan)\b/.test(t)){volume.value=Math.min(1,audio.volume+0.1);audio.volume=parseFloat(volume.value);}
-    else if(/\b(volume down|hinaan)\b/.test(t)){volume.value=Math.max(0,audio.volume-0.1);audio.volume=parseFloat(volume.value);}
-    else say('Hindi ko naintindihan: "'+t+'"');
-  }
-
-  rec.onresult=e=>handle(e.results[0][0].transcript);
-  rec.onerror=e=>say('Error sa mic: '+e.error);
-  rec.onend=()=>{listening=false;micBtn.classList.remove('listening');};
-  micBtn.onclick=()=>{
-    if(listening){rec.stop();return;}
-    try{rec.start();listening=true;micBtn.classList.add('listening');say('Nakikinig... sabihin ang command');}
-    catch(err){say('Hindi ma-start ang mic');}
-  };
+let ctx = null, preGain = null, filters = [];
+function initAudio(){
+  if(ctx){ if(ctx.state === 'suspended') ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  try {
+    ctx = new AC();
+    const src = ctx.createMediaElementSource(audio);
+    preGain = ctx.createGain();
+    filters = FREQS.map(f => {
+      const b = ctx.createBiquadFilter();
+      b.type = 'peaking'; b.frequency.value = f; b.Q.value = 1.4; b.gain.value = 0;
+      return b;
+    });
+    let node = src;
+    node.connect(preGain); node = preGain;
+    filters.forEach(b => { node.connect(b); node = b; });
+    node.connect(ctx.destination);
+    applyEQ();
+  } catch(e){ ctx = null; say('Hindi suportado ang equalizer sa browser na ito'); }
 }
+function applyEQ(){
+  if(!ctx) return;
+  preGain.gain.value = eq.on ? Math.pow(10, eq.pre/20) : 1;
+  filters.forEach((b, i) => b.gain.value = eq.on ? eq.bands[i] : 0);
+}
+function saveEQ(){ localStorage.setItem('eqState', JSON.stringify(eq)); }
+
+function buildEQ(){
+  const sel = $('presetSel');
+  sel.innerHTML = '';
+  Object.keys(PRESETS).forEach(n => {
+    const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+  const oc = document.createElement('option'); oc.value = 'Custom'; oc.textContent = 'Custom'; sel.appendChild(oc);
+  sel.value = eq.preset;
+
+  const bandsEl = $('bands');
+  bandsEl.innerHTML = '';
+  eq.bands.forEach((v, i) => {
+    const col = document.createElement('div');
+    col.className = 'bandcol';
+    col.innerHTML = '<span class="dbv"></span><div class="band"><input type="range" min="-12" max="12" step="1"></div><span class="lbl">' + LABELS[i] + '</span>';
+    const inp = col.querySelector('input'), dbv = col.querySelector('.dbv');
+    inp.value = v; dbv.textContent = v;
+    inp.oninput = () => {
+      eq.bands[i] = +inp.value; dbv.textContent = inp.value;
+      eq.preset = 'Custom'; $('presetSel').value = 'Custom';
+      applyEQ(); saveEQ();
+    };
+    bandsEl.appendChild(col);
+  });
+  $('pre').value = eq.pre; $('preVal').textContent = eq.pre;
+  $('eqToggle').textContent = 'EQ: ' + (eq.on ? 'ON' : 'OFF');
+  $('eqToggle').classList.toggle('on', !eq.on);
+}
+
+$('eqBtn').onclick = () => { buildEQ(); $('eqSheet').classList.add('show'); };
+$('eqClose').onclick = () => $('eqSheet').classList.remove('show');
+$('presetSel').onchange = e => {
+  const v = e.target.value;
+  if(PRESETS[v]){ eq.bands = PRESETS[v].slice(); eq.preset = v; buildEQ(); applyEQ(); saveEQ(); }
+};
+$('pre').oninput = e => { eq.pre = +e.target.value; $('preVal').textContent = eq.pre; applyEQ(); saveEQ(); };
+$('eqToggle').onclick = () => { eq.on = !eq.on; buildEQ(); applyEQ(); saveEQ(); };
+$('eqReset').onclick = () => { eq = { on: true, pre: 0, bands: PRESETS.Flat.slice(), preset: 'Flat' }; buildEQ(); applyEQ(); saveEQ(); };
+
+/* ---------- Start ---------- */
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist();
+loadLibrary();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
 </script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 </body>
 </html>
